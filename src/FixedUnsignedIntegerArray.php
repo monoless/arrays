@@ -1,18 +1,20 @@
 <?php
+
 namespace Monoless\Arrays;
 
 use ArrayAccess;
+use Countable;
 use InvalidArgumentException;
 use Iterator;
 
-class FixedUnsignedIntegerArray implements Iterator, ArrayAccess
+class FixedUnsignedIntegerArray implements Iterator, ArrayAccess, Countable
 {
     const BINARY_FORMAT = 'I';
 
     private $position = 0;
     private $length = 0;
     private $binaryLength = 0;
-    private $data = "";
+    private $data = null;
 
     public function __construct($length)
     {
@@ -30,8 +32,11 @@ class FixedUnsignedIntegerArray implements Iterator, ArrayAccess
         $position = $position * $this->binaryLength;
         $unpack = unpack(self::BINARY_FORMAT, substr($this->data, $position, $this->binaryLength));
         $result = false !== $unpack ? $unpack[1] : null;
-        if (0 === $result) return null;
-        return --$result;
+        if (0 === $result) {
+            return null;
+        } else {
+            return $result - 1;
+        }
     }
 
     private function setEntry($position, $value)
@@ -42,7 +47,9 @@ class FixedUnsignedIntegerArray implements Iterator, ArrayAccess
 
     private function convertBinary($value)
     {
-        if (null !== $value) ++$value;
+        if (null !== $value) {
+            $value = $value + 1;
+        }
         return pack(self::BINARY_FORMAT, $value);
     }
 
@@ -61,8 +68,9 @@ class FixedUnsignedIntegerArray implements Iterator, ArrayAccess
         return $this->position;
     }
 
-    public function next() {
-        ++$this->position;
+    public function next()
+    {
+        $this->position = $this->position + 1;
     }
 
     public function valid()
@@ -70,7 +78,8 @@ class FixedUnsignedIntegerArray implements Iterator, ArrayAccess
         return $this->offsetExists($this->position);
     }
 
-    public function offsetSet($offset, $value) {
+    public function offsetSet($offset, $value)
+    {
         if (is_integer($offset) && $offset < $this->length && $offset >= 0) {
             $this->setEntry($offset, $value);
         } else {
@@ -78,21 +87,19 @@ class FixedUnsignedIntegerArray implements Iterator, ArrayAccess
         }
     }
 
-    public function offsetExists($offset) {
+    public function offsetExists($offset)
+    {
         return ($offset < $this->length && $offset >= 0);
     }
 
-    public function offsetUnset($offset) {
+    public function offsetUnset($offset)
+    {
         $this->setEntry($offset, null);
     }
 
-    public function offsetGet($offset) {
-        return $this->offsetExists($offset) ? $this->getEntry($offset) : null;
-    }
-
-    public function size()
+    public function offsetGet($offset)
     {
-        return $this->length;
+        return $this->getEntry($offset);
     }
 
     public function __debugInfo()
@@ -100,5 +107,10 @@ class FixedUnsignedIntegerArray implements Iterator, ArrayAccess
         return [
             'length' => $this->length,
         ];
+    }
+
+    public function count()
+    {
+        return $this->length;
     }
 }
