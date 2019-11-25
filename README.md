@@ -56,4 +56,5 @@ echo "for iterator legacy array : {$time_elapsed_secs}\n";
 # for iterator legacy array : 0.00018191337585449
 ```
 ## history
+- 2019/11/26 - Make FixedUnsignedIntegerArray Countable Again!
 - 2019/11/24 - adding FixedUnsignedIntegerArray class
